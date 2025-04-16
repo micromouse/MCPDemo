@@ -34,8 +34,17 @@ namespace AspNetcoreSSEServer.Tools {
                 Temperature = 0.7f,
             };
 
-            var samplingResponse = await mcpServer.AsSamplingChatClient().GetResponseAsync(messages, options, cancellationToken);
-            return $"LLM sampling result: {samplingResponse}";
+            try {
+                /*
+                var samplingResponse = await mcpServer.AsSamplingChatClient().GetResponseAsync(messages, options, cancellationToken);
+                logger.LogInformation("LLM sampling result: {@result}", samplingResponse);
+                */
+                await Task.Delay(1000, cancellationToken);
+                return $"LLM sampling result: {prompt}";
+            } catch (Exception ex) {
+                logger.LogError(ex, "Error occurred while sampling LLM at {time}", DateTime.Now);
+                return $"LLM sampling result: Error[{prompt}]";
+            }
         }
     }
 }

@@ -15,4 +15,10 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="credential.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

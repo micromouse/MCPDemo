@@ -3,8 +3,9 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol.Transport;
 using OpenAI;
-using OpenAI.Chat;
 using System.ClientModel;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace ChatWithTool {
     /// <summary>
@@ -14,18 +15,68 @@ namespace ChatWithTool {
         /// <summary>
         /// Main method - Entry point for the application
         /// </summary>
-        /// <param name="args">参数</param>
-        static async Task Main(string[] args) {
-            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-            using var chatClient = CreateChatClient(loggerFactory);
+        /// <param name="_">参数</param>
+        static async Task Main(string[] _) {
             Console.WriteLine("Connecting client to MCP 'http://localhost:5172' server!");
+
+            // Create a chat client using OpenAI API
+            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            using var chatClient = CreateChatClient(loggerFactory, GetCredentialSetting());
+            var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
 
             // Get all available tools
             var tools = await GetMcpClientToolsAsync(chatClient, loggerFactory);
 
+            var messages = new List<ChatMessage>();
+            while (true) {
+                Console.Write("Q: ");
+                messages.Add(new(ChatRole.User, Console.ReadLine()));
 
+                var updates = new List<ChatResponseUpdate>();
+                await foreach (var update in chatClient.GetStreamingResponseAsync(messages, new() { Tools = [.. tools] })) {
+                    Console.Write(update.Text);
+                    updates.Add(update);
+                }
+                messages.AddMessages(updates);
 
-            Console.ReadKey();
+                /*
+                // Process function calls
+                var functionCalls = updates
+                    .SelectMany(update => update.Contents)
+                    .OfType<FunctionCallContent>()
+                    .ToList();
+                foreach (var functionCall in functionCalls) {
+                    var tool = tools.FirstOrDefault(t => t.Name == functionCall.Name);
+                    if (tool != null) {
+                        var args = new AIFunctionArguments(functionCall.Arguments);
+                        var result = await tool.InvokeAsync(args, CancellationToken.None);
+                        Console.WriteLine($"Tool {tool.Name} result: {JsonSerializer.Serialize(result, jsonSerializerOptions)}");
+
+                        // Send the result back to the chat client
+                        messages.Add(new ChatMessage(ChatRole.Tool, result?.ToString()) {
+                            AdditionalProperties = new AdditionalPropertiesDictionary {
+                                ["tool_call_id"] = functionCall.CallId
+                            }
+                        });
+                    }
+                }
+                */
+
+                Console.WriteLine();
+            }
+
+        }
+
+        /// <summary>
+        /// GetCredentialSetting - Retrieves the credential settings from a JSON file
+        /// </summary>
+        /// <returns>凭据设置</returns>
+        private static CredentialSetting GetCredentialSetting() {
+            var json = File.ReadAllText("credential.json");
+            return JsonSerializer.Deserialize<CredentialSetting>(json) ?? throw new Exception("Failed to deserialize credential.json");
         }
 
         /// <summary>
@@ -33,16 +84,17 @@ namespace ChatWithTool {
         /// </summary>
         /// <param name="loggerFactory">日志器工厂</param>
         /// <returns><see cref="IChatClient"/></returns>
-        private static IChatClient CreateChatClient(ILoggerFactory loggerFactory) {
+        private static IChatClient CreateChatClient(ILoggerFactory loggerFactory, CredentialSetting credentialSetting) {
             var options = new OpenAIClientOptions {
                 Endpoint = new Uri("https://api.deepseek.com/v1")
             };
-            var credential = new ApiKeyCredential("sk-d3c507b22e6e4d9990dd0596050501b6");
+            var credential = new ApiKeyCredential(credentialSetting.ApiKey);
             var openAIClient = new OpenAIClient(credential, options).GetChatClient("deepseek-chat");
 
             return openAIClient.AsIChatClient()
                 .AsBuilder()
                 .UseOpenTelemetry(loggerFactory: loggerFactory, configure: o => o.EnableSensitiveData = true)
+                .UseFunctionInvocation(loggerFactory: loggerFactory)
                 .Build();
         }
 
@@ -71,5 +123,6 @@ namespace ChatWithTool {
 
             return tools;
         }
+
     }
 }
