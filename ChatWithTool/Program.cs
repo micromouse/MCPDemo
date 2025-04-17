@@ -94,7 +94,7 @@ namespace ChatWithTool {
 
             return openAIClient.AsIChatClient()
                 .AsBuilder()
-                .UseOpenTelemetry(loggerFactory: loggerFactory, configure: o => o.EnableSensitiveData = true)
+                //.UseOpenTelemetry(loggerFactory: loggerFactory, configure: o => o.EnableSensitiveData = true)
                 .UseFunctionInvocation(loggerFactory: loggerFactory)
                 .Build();
         }
@@ -113,7 +113,7 @@ namespace ChatWithTool {
                 clientOptions: new() {
                     Capabilities = new() { Sampling = new() { SamplingHandler = chatClient.CreateSamplingHandler() } },
                 },
-                loggerFactory: loggerFactory);
+                loggerFactory: null);
 
             // Get all available tools
             Console.WriteLine("Tools available:");
