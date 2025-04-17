@@ -33,9 +33,10 @@ namespace ChatWithTool {
 
             var messages = new List<ChatMessage>();
             while (true) {
-                Console.Write("Q: ");
+                Console.Write("USER> ");
                 messages.Add(new(ChatRole.User, Console.ReadLine()));
 
+                Console.Write("AI> ");
                 var updates = new List<ChatResponseUpdate>();
                 await foreach (var update in chatClient.GetStreamingResponseAsync(messages, new() { Tools = [.. tools] })) {
                     Console.Write(update.Text);
