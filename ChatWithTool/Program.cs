@@ -4,10 +4,7 @@ using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol.Transport;
 using OpenAI;
 using System.ClientModel;
-<<<<<<< HEAD
 using System.Text.Encodings.Web;
-=======
->>>>>>> 96f2b917b2a921439db4d2d7cb4c172b77124dfd
 using System.Text.Json;
 
 namespace ChatWithTool {
@@ -25,18 +22,15 @@ namespace ChatWithTool {
             // Create a chat client using OpenAI API
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             using var chatClient = CreateChatClient(loggerFactory, GetCredentialSetting());
-<<<<<<< HEAD
             var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) {
                 WriteIndented = true,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
-=======
->>>>>>> 96f2b917b2a921439db4d2d7cb4c172b77124dfd
 
             // Get all available tools
             var tools = await GetMcpClientToolsAsync(chatClient, loggerFactory);
 
-<<<<<<< HEAD
+
             var messages = new List<ChatMessage>();
             while (true) {
                 Console.Write("Q: ");
@@ -75,18 +69,6 @@ namespace ChatWithTool {
                 Console.WriteLine();
             }
 
-        }
-
-        /// <summary>
-        /// GetCredentialSetting - Retrieves the credential settings from a JSON file
-        /// </summary>
-        /// <returns>凭据设置</returns>
-        private static CredentialSetting GetCredentialSetting() {
-            var json = File.ReadAllText("credential.json");
-            return JsonSerializer.Deserialize<CredentialSetting>(json) ?? throw new Exception("Failed to deserialize credential.json");
-=======
-            Console.ReadKey();
->>>>>>> 96f2b917b2a921439db4d2d7cb4c172b77124dfd
         }
 
         /// <summary>
