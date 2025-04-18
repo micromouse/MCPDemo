@@ -19,14 +19,24 @@ namespace AspNetcoreSSEServer.Tools {
             [Description("开始日期")] DateTime startDate,
             [Description("结束日期")] DateTime endDate
         ) {
-            // Simulate fetching sales data
             var salesData = new List<DailySalesViewModel>();
+
+            // Generate random sales data for the specified date range
             for (var date = startDate; date <= endDate; date = date.AddDays(1)) {
-                salesData.Add(new DailySalesViewModel {
-                    Date = date,
-                    TotalSales = new Random().Next(1000, 5000)
-                });
+                salesData.AddRange([
+                    new() {
+                        Date = date,
+                        WaresName = "商品" + new Random().Next(1, 10).ToString(),
+                        TotalSales = new Random().Next(1000, 5000)
+                    },
+                    new() {
+                        Date = date,
+                        WaresName = "商品" + new Random().Next(1, 10).ToString(),
+                        TotalSales = new Random().Next(1000, 5000)
+                    }
+                ]);
             }
+
             return salesData;
         }
     }

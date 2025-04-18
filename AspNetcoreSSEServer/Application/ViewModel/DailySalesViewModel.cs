@@ -8,6 +8,10 @@
         /// </summary>
         public DateTime Date { get; init; }
         /// <summary>
+        /// 商品名称
+        /// </summary>
+        public string WaresName { get; init; } = null!;
+        /// <summary>
         /// 销售额
         /// </summary>
         public decimal TotalSales { get; init; }

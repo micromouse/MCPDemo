@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol.Transport;
 using OpenAI;
+using System;
 using System.ClientModel;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -22,51 +24,29 @@ namespace ChatWithTool {
             // Create a chat client using OpenAI API
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             using var chatClient = CreateChatClient(loggerFactory, GetCredentialSetting());
-            var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
 
             // Get all available tools
             var tools = await GetMcpClientToolsAsync(chatClient, loggerFactory);
 
-
-            var messages = new List<ChatMessage>();
+            var memoryManager = new ConversationMemoryManager(chatClient);
             while (true) {
                 Console.Write("USER> ");
-                messages.Add(new(ChatRole.User, Console.ReadLine()));
+                memoryManager.AddMessage(new(ChatRole.User, Console.ReadLine()));
 
                 Console.Write("AI> ");
-                var updates = new List<ChatResponseUpdate>();
-                await foreach (var update in chatClient.GetStreamingResponseAsync(messages, new() { Tools = [.. tools] })) {
+                var updates = new StringBuilder();
+                await foreach (var update in chatClient.GetStreamingResponseAsync(memoryManager.GetMessages(), new() { Tools = [.. tools] })) {
                     Console.Write(update.Text);
-                    updates.Add(update);
+                    updates.Append(update.Text);
                 }
-                messages.AddMessages(updates);
+                memoryManager.AddMessage(new ChatMessage(ChatRole.Assistant, updates.ToString()));
 
-                /*
-                // Process function calls
-                var functionCalls = updates
-                    .SelectMany(update => update.Contents)
-                    .OfType<FunctionCallContent>()
-                    .ToList();
-                foreach (var functionCall in functionCalls) {
-                    var tool = tools.FirstOrDefault(t => t.Name == functionCall.Name);
-                    if (tool != null) {
-                        var args = new AIFunctionArguments(functionCall.Arguments);
-                        var result = await tool.InvokeAsync(args, CancellationToken.None);
-                        Console.WriteLine($"Tool {tool.Name} result: {JsonSerializer.Serialize(result, jsonSerializerOptions)}");
+                //自动生成摘要
+                await memoryManager.GenerateSummaryAsync();
 
-                        // Send the result back to the chat client
-                        messages.Add(new ChatMessage(ChatRole.Tool, result?.ToString()) {
-                            AdditionalProperties = new AdditionalPropertiesDictionary {
-                                ["tool_call_id"] = functionCall.CallId
-                            }
-                        });
-                    }
-                }
-                */
-
+                //输出当前摘要和角色
+                Console.WriteLine($"\n[DEBUG] 摘要：{memoryManager.GetSummary()}");
+                Console.WriteLine($"[DEBUG] 当前角色：{memoryManager.GetRole()}");
                 Console.WriteLine();
             }
 
