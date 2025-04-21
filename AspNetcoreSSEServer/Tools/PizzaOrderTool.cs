@@ -7,7 +7,7 @@ namespace AspNetcoreSSEServer.Tools {
     /// PizzaOrderTools - A tool for managing pizza orders
     /// </summary>
     [McpServerToolType, Description("披萨订单处理工具")]
-    public class PizzaOrderTools {
+    public class PizzaOrderTool {
         private static readonly Dictionary<string, PizzaOrderSessionDto> _orders = new();
 
         /// <summary>
