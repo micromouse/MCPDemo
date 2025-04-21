@@ -54,10 +54,12 @@ namespace AspNetcoreSSEServer.Tools {
         public PizzaPaymentResultDto PayForPizzaOrder(
             [Description("订单Id")] string orderId,
             [Description("支付方式，如：支付宝、微信、信用卡")] string paymentMethod,
-            [Description("为订单支付，必须提供支付金额")] decimal? totalPrice
+            [Description("支付金额，用户必须明确提供支付金额")] decimal? totalPrice
         ) {
             if (!_orders.TryGetValue(orderId, out var session)) {
                 throw new ArgumentException($"订单Id {orderId} 不存在");
+            } else if ((totalPrice ?? 0) <= 0) {
+                throw new ArgumentOutOfRangeException(nameof(totalPrice), "支付金额，用户必须明确提供支付金额");
             }
 
             //支付
@@ -68,7 +70,7 @@ namespace AspNetcoreSSEServer.Tools {
             //结果
             return new PizzaPaymentResultDto {
                 OrderId = orderId,
-                Message = (totalPrice ?? 0) <= 0 ? "支付金额为0元，请确认订单已正确结算" : $"订单 {orderId} 已支付成功，支付方式：{paymentMethod}，金额：{totalPrice} 元",
+                Message = $"订单 {orderId} 已支付成功，支付方式：{paymentMethod}，金额：{totalPrice} 元",
                 PaymentMethod = paymentMethod,
                 PaidAmount = totalPrice
             };

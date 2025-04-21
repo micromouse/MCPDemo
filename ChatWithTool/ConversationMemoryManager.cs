@@ -9,8 +9,7 @@ namespace ChatWithTool {
     public class ConversationMemoryManager(IChatClient chatClient) {
         private string _summary = string.Empty;
         private string _currentRole = "多功能业务助手";
-        private readonly int _maxMessages = 20;
-        private readonly int _summarizeAfter = 12;
+        private readonly int _maxMessagesCount = 20;
         private readonly List<ChatMessage> _messages = [];
 
         /// <summary>
@@ -20,7 +19,7 @@ namespace ChatWithTool {
         public IReadOnlyList<ChatMessage> GetMessages() {
             return [
                 new(ChatRole.System, this.GetSystemPrompt()),
-                .._messages.TakeLast(_maxMessages).ToList()
+                .._messages.TakeLast(_maxMessagesCount).ToList()
             ];
         }
 
@@ -57,19 +56,19 @@ namespace ChatWithTool {
         /// </summary>
         /// <returns>任务</returns>
         public async Task GenerateSummaryAsync() {
-            //消息数不超过摘要数，不生成摘要
-            if (_messages.Count < _summarizeAfter) {
+            //消息数不超过最大消息数，不生成摘要
+            if (_messages.Count < _maxMessagesCount) {
                 return;
             }
 
             //需要生成摘要的消息
-            var recentMessages = _messages.TakeLast(_summarizeAfter)
+            var summaryMessages = _messages.Take(_messages.Count - _maxMessagesCount)
                 .Select(m => $"{m.Role}:{m.Text}")
                 .ToList();
 
             //根据消息生成摘要和角色
-            _summary = await this.GenerateSummaryAsync(recentMessages);
-            _currentRole = await this.GenerateRoleAsync(recentMessages);
+            _summary = await this.GenerateSummaryAsync(summaryMessages);
+            _currentRole = await this.GenerateRoleAsync(summaryMessages);
         }
 
         /// <summary>
