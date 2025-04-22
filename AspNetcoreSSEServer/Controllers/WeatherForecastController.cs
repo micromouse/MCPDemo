@@ -1,4 +1,5 @@
 using AspNetcoreSSEServer.Application.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AspNetcoreSSEServer.Controllers {
@@ -6,6 +7,7 @@ namespace AspNetcoreSSEServer.Controllers {
     /// Weather forecast controller
     /// </summary>
     /// <param name="logger">ÈÕÖ¾Æ÷</param>
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController(ILogger<WeatherForecastController> logger) : ControllerBase {

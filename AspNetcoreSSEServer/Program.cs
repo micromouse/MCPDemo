@@ -35,6 +35,7 @@ namespace AspNetcoreSSEServer {
             builder.Services.AddSingleton<SimpleLLMTool>();
 
             var app = builder.Build();
+            app.UseRouting();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment()) {
