@@ -1,4 +1,5 @@
 ﻿using AspNetcoreSSEServer.Tools;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AspNetcoreSSEServer {
     /// <summary>
@@ -15,12 +16,22 @@ namespace AspNetcoreSSEServer {
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddOpenApi().AddSwaggerGen();
+
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
+                {
+                    options.Authority = "https://your-auth-server.com"; // 你的身份认证服务器
+                    options.TokenValidationParameters = new TokenValidationParameters {
+                        ValidateAudience = false
+                    };
+                });
+            builder.Services.AddAuthorization();
+
             builder.Services
                 .AddMcpServer()
                 .WithHttpTransport()
                 .WithStdioServerTransport()
                 .WithToolsFromAssembly(typeof(SimpleLLMTool).Assembly);
-            
             builder.Services.AddSingleton<SimpleLLMTool>();
 
             var app = builder.Build();
@@ -31,6 +42,7 @@ namespace AspNetcoreSSEServer {
                 app.UseSwagger().UseSwaggerUI();
             }
 
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
             app.MapMcp();

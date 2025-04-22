@@ -10,11 +10,11 @@
         /// <summary>
         /// Pizza类型
         /// </summary>
-        public string PizzaType { get; init; } = null!;
+        public string PizzaType { get; set; } = null!;
         /// <summary>
         /// 数量
         /// </summary>
-        public int? Quantity { get; init; }
+        public int? Quantity { get; set; }
         /// <summary>
         /// 支付方式
         /// </summary>

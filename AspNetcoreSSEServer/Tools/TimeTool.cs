@@ -1,10 +1,12 @@
-﻿using ModelContextProtocol.Server;
+﻿using Microsoft.AspNetCore.Authorization;
+using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 namespace AspNetcoreSSEServer.Tools {
     /// <summary>
     /// TimeTool - A tool to get the current time
     /// </summary>
+    [Authorize]
     [McpServerToolType]
     public class TimeTool {
         /// <summary>

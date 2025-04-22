@@ -1,6 +1,7 @@
 ﻿using AspNetcoreSSEServer.Application.DtoModel;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace AspNetcoreSSEServer.Tools {
     /// <summary>
@@ -8,7 +9,45 @@ namespace AspNetcoreSSEServer.Tools {
     /// </summary>
     [McpServerToolType, Description("披萨订单处理工具")]
     public class PizzaOrderTool {
-        private static readonly Dictionary<string, PizzaOrderSessionDto> _orders = new();
+        private static readonly Dictionary<string, PizzaOrderSessionDto> _orders = [];
+
+        /// <summary>
+        /// 获得指定订单Id的披萨订单信息
+        /// </summary>
+        /// <param name="orderId">订单Id</param>
+        /// <returns>披萨订单信息</returns>
+        [McpServerTool, Description("获取指定订单Id的披萨订单信息")]
+        public PizzaOrderSessionDto GetPizzaOrderSession([Description("披萨订单Id"), Required] string orderId) {
+            if (_orders.TryGetValue(orderId, out var session)) {
+                return session;
+            } else {
+                throw new ArgumentException($"订单Id {orderId} 不存在");
+            }
+        }
+
+        /// <summary>
+        /// 更新披萨订单信息
+        /// </summary>
+        /// <param name="orderId">订单Id</param>
+        /// <param name="session">新披萨订单信息</param>
+        /// <returns>新披萨订单信息</returns>
+        [McpServerTool, Description("更新披萨订单信息")]
+        public PizzaOrderSessionDto UpdatePizzaOrderSession(
+            [Description("披萨订单Id"), Required] string orderId,
+            [Description("新披萨订单信息"), Required] PizzaOrderSessionDto session
+        ) {
+            if (_orders.TryGetValue(orderId, out var existingSession)) {
+                //更新订单信息
+                existingSession.PizzaType = session.PizzaType;
+                existingSession.Quantity = session.Quantity;
+                existingSession.PaymentMethod = session.PaymentMethod;
+                existingSession.TotalPrice = session.TotalPrice;
+                existingSession.IsPaid = session.IsPaid;
+                return existingSession;
+            } else {
+                throw new ArgumentException($"订单Id {orderId} 不存在");
+            }
+        }
 
         /// <summary>
         /// 开始一个披萨订单
@@ -18,8 +57,8 @@ namespace AspNetcoreSSEServer.Tools {
         /// <returns>结果</returns>
         [McpServerTool, Description("开始一个披萨订单（必须提供披萨类型和订购数量，不允许假设数量为1）")]
         public PizzaOrderResultDto StartPizzaOrder(
-            [Description("披萨类型，例如：奶酪、夏威夷")] string pizzaType,
-            [Description("订购数量,用户必须明确输入订购数量")] int? quantity
+            [Description("披萨类型，例如：奶酪、夏威夷"), Required] string pizzaType,
+            [Description("订购数量,用户必须明确输入订购数量"), Required] int? quantity
         ) {
             var orderId = Ulid.NewUlid().ToString();
 
@@ -53,8 +92,8 @@ namespace AspNetcoreSSEServer.Tools {
         [McpServerTool, Description("支付披萨订单")]
         public PizzaPaymentResultDto PayForPizzaOrder(
             [Description("订单Id")] string orderId,
-            [Description("支付方式，如：支付宝、微信、信用卡")] string paymentMethod,
-            [Description("支付金额，用户必须明确提供支付金额")] decimal? totalPrice
+            [Description("支付方式，如：支付宝、微信、信用卡"), Required] string paymentMethod,
+            [Description("支付金额，用户必须明确提供支付金额"), Required] decimal? totalPrice
         ) {
             if (!_orders.TryGetValue(orderId, out var session)) {
                 throw new ArgumentException($"订单Id {orderId} 不存在");
