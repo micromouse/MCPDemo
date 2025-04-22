@@ -42,7 +42,8 @@ namespace AspNetcoreSSEServer.Tools {
                 existingSession.Quantity = session.Quantity;
                 existingSession.PaymentMethod = session.PaymentMethod;
                 existingSession.TotalPrice = session.TotalPrice;
-                existingSession.IsPaid = session.IsPaid;
+                existingSession.IsPaid = false;
+
                 return existingSession;
             } else {
                 throw new ArgumentException($"订单Id {orderId} 不存在");
