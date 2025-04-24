@@ -46,7 +46,11 @@ namespace AspNetcoreSSEServer {
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
-            app.MapMcp();
+            app.UseWhen(
+                context => context.Request.Path.StartsWithSegments("/mcp"),
+                appBuilder => appBuilder.UseMiddleware<MyAuthenticationMiddleware>()
+            );
+            app.MapMcp("/mcp");
 
             app.Run();
         }

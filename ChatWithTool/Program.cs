@@ -89,10 +89,13 @@ namespace ChatWithTool {
         private static async Task<IEnumerable<McpClientTool>> GetMcpClientToolsAsync(IChatClient chatClient, ILoggerFactory loggerFactory) {
             var mcpClient = await McpClientFactory.CreateAsync(
                 new SseClientTransport(new SseClientTransportOptions {
-                    Endpoint = new Uri("http://localhost:5172/")
+                    Endpoint = new Uri("http://localhost:5172/mcp/sse"),
+                    AdditionalHeaders = new Dictionary<string, string> {
+                        { "Authorization", "Bearer your-secret-token" }
+                    }
                 }),
                 clientOptions: new() {
-                    Capabilities = new() { Sampling = new() { SamplingHandler = chatClient.CreateSamplingHandler() } },
+                    Capabilities = new() { Sampling = new() { SamplingHandler = chatClient.CreateSamplingHandler() } }
                 },
                 loggerFactory: null);
 
